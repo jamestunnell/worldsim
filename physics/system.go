@@ -3,6 +3,7 @@ package system
 import (
 	"errors"
 
+	"github.com/jakecoffman/cp"
 	"github.com/rs/zerolog/log"
 
 	"github.com/jamestunnell/worldsim/system"
@@ -12,6 +13,8 @@ type System struct {
 	running *system.Flag
 	stop    chan struct{}
 	exec    chan func()
+
+	space *cp.Space
 }
 
 var errAlreadyRunning = errors.New("physics system is already running")
@@ -21,6 +24,7 @@ func New(name string, do func()) *System {
 		running: system.NewFlag(false),
 		stop:    make(chan struct{}),
 		exec:    make(chan func()),
+		space:   cp.NewSpace(),
 	}
 }
 
@@ -28,6 +32,8 @@ func (sys *System) Start() error {
 	if sys.running.Get() {
 		return errAlreadyRunning
 	}
+
+	sys.space.Iterations = 1
 
 	go sys.run()
 
